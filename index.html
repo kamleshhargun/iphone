@@ -13,6 +13,7 @@
             color: #fff;
             overflow: hidden;
             user-select: none;
+            -webkit-user-select: none;
         }
         .page {
             display: none;
@@ -28,30 +29,107 @@
             display: flex;
             flex-direction: column;
         }
-        /* App Grid Layout */
+        /* App Grid Layout with Auto-Rows for Dynamic Sizes */
         .app-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
             padding: 20px;
+            grid-auto-rows: minmax(90px, auto);
         }
+        /* Dynamic iOS Widget Sizes */
+        .app-icon.size-small {
+            grid-column: span 1;
+            grid-row: span 1;
+        }
+        .app-icon.size-medium {
+            grid-column: span 2;
+            grid-row: span 1;
+        }
+        .app-icon.size-large {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+        /* Icon Configurations */
         .app-icon {
             display: flex;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .app-icon:active {
+            transform: scale(0.92);
+        }
+        /* Sizing Elements inside App Icon */
+        .size-small .icon-content {
             flex-direction: column;
             align-items: center;
-            cursor: pointer;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
         }
+        .size-small .icon-box { width: 60px; height: 60px; border-radius: 14px; }
+        .size-small .icon-text { font-size: 11px; margin-top: 5px; text-align: center; }
+
+        .size-medium .icon-content {
+            flex-direction: row;
+            align-items: center;
+            padding: 0 15px;
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .size-medium .icon-box { width: 48px; height: 48px; border-radius: 12px; margin-right: 12px; }
+        .size-medium .icon-text { font-size: 14px; font-weight: 600; }
+
+        .size-large .icon-content {
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 15px;
+            width: 100%;
+            height: 100%;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .size-large .icon-box { width: 56px; height: 56px; border-radius: 14px; }
+        .size-large .icon-text { font-size: 16px; font-weight: bold; width: 100%; text-align: left; }
+
         .icon-box {
-            width: 60px;
-            height: 60px;
-            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 5px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-        /* Pull to Refresh Indicator */
+        /* Custom iOS Context Menu */
+        #context-menu {
+            display: none;
+            position: absolute;
+            background: rgba(30, 30, 30, 0.9);
+            backdrop-filter: blur(15px);
+            border-radius: 14px;
+            width: 160px;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+        #context-menu button {
+            width: 100%;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        #context-menu button:last-child { border-bottom: none; }
+        #context-menu button:hover { background: rgba(255,255,255,0.1); }
+
         #ptr-indicator {
             position: absolute;
             top: -50px;
@@ -73,42 +151,37 @@
         <i data-lucide="refresh-cw" class="animate-spin h-5 w-5"></i> <span class="ml-2 text-sm">Refreshing...</span>
     </div>
 
-    <div id="home-page" class="page active" style="background: linear-gradient(180deg, #1a2a6c, #b21f1f, #fdbb2d);">
+    <div id="home-page" class="page active" style="background: linear-gradient(180deg, #111827, #312e81, #047857);">
         <div class="h-8 w-full"></div>
-        
-        <div class="text-center my-6">
+        <div class="text-center my-4">
             <h1 class="text-4xl font-light" id="ios-clock">12:00</h1>
             <p class="text-sm opacity-80" id="ios-date">Thursday, July 2</p>
         </div>
 
         <div class="app-grid flex-1">
-            <div class="app-icon" onclick="openPage('daily-scan')">
-                <div class="icon-box bg-blue-500"><i data-lucide="qr-code"></i></div>
-                <span class="text-xs text-center">Daily Scan</span>
+            <div class="app-icon size-small" id="app-daily-scan" data-id="daily-scan" onclick="handleAppClick(this)">
+                <div class="icon-content">
+                    <div class="icon-box bg-blue-500"><i data-lucide="qr-code"></i></div>
+                    <span class="icon-text">Daily Scan</span>
+                </div>
             </div>
-            <div class="app-icon" onclick="openPage('order-lookup')">
-                <div class="icon-box bg-green-500"><i data-lucide="search"></i></div>
-                <span class="text-xs text-center">Order Look</span>
+            <div class="app-icon size-small" id="app-order-lookup" data-id="order-lookup" onclick="handleAppClick(this)">
+                <div class="icon-content">
+                    <div class="icon-box bg-green-500"><i data-lucide="search"></i></div>
+                    <span class="icon-text">Order Look</span>
+                </div>
             </div>
-            <div class="app-icon" onclick="openPage('track-order')">
-                <div class="icon-box bg-orange-500"><i data-lucide="truck"></i></div>
-                <span class="text-xs text-center">Track Order</span>
+            <div class="app-icon size-small" id="app-track-order" data-id="track-order" onclick="handleAppClick(this)">
+                <div class="icon-content">
+                    <div class="icon-box bg-orange-500"><i data-lucide="truck"></i></div>
+                    <span class="icon-text">Track Order</span>
+                </div>
             </div>
-            <div class="app-icon" onclick="openPage('inventory')">
-                <div class="icon-box bg-purple-500"><i data-lucide="package"></i></div>
-                <span class="text-xs text-center">Inventory</span>
-            </div>
-            <div class="app-icon" onclick="openPage('analytics')">
-                <div class="icon-box bg-pink-500"><i data-lucide="trending-up"></i></div>
-                <span class="text-xs text-center">Analytics</span>
-            </div>
-            <div class="app-icon" onclick="openPage('customers')">
-                <div class="icon-box bg-indigo-500"><i data-lucide="users"></i></div>
-                <span class="text-xs text-center">Customers</span>
-            </div>
-            <div class="app-icon" onclick="openPage('settings')">
-                <div class="icon-box bg-gray-500"><i data-lucide="settings"></i></div>
-                <span class="text-xs text-center">Settings</span>
+            <div class="app-icon size-small" id="app-inventory" data-id="inventory" onclick="handleAppClick(this)">
+                <div class="icon-content">
+                    <div class="icon-box bg-purple-500"><i data-lucide="package"></i></div>
+                    <span class="icon-text">Inventory</span>
+                </div>
             </div>
         </div>
     </div>
@@ -116,19 +189,10 @@
     <div id="daily-scan" class="page">
         <div class="p-4 bg-zinc-900 border-b border-zinc-800 flex justify-between items-center">
             <button onclick="goBack()" class="text-blue-500 flex items-center"><i data-lucide="chevron-left"></i> Back</button>
-            <h2 class="font-bold text-lg">Daily Scan</h2>
+            <h2 class="font-bold text-lg">Daily Scan Module</h2>
             <div class="w-10"></div>
         </div>
-        <div class="p-4 space-y-4 overflow-y-auto flex-1">
-            <div class="bg-zinc-800 p-4 rounded-xl">
-                <label class="block text-sm opacity-70 mb-2">Scan AWB (Pickup / Return)</label>
-                <input type="text" placeholder="Scan or Enter AWB Number" class="w-full bg-zinc-700 p-3 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <div class="flex gap-2 mt-3">
-                    <button class="flex-1 bg-green-600 p-2 rounded-lg text-sm font-semibold">Mark Pickup</button>
-                    <button class="flex-1 bg-red-600 p-2 rounded-lg text-sm font-semibold">Mark Return</button>
-                </div>
-            </div>
-        </div>
+        <iframe src="daily-scan.html" class="w-full flex-1 border-none bg-white"></iframe>
     </div>
 
     <div id="order-lookup" class="page">
@@ -140,9 +204,8 @@
         <div class="p-4 space-y-4 overflow-y-auto flex-1">
             <div class="bg-zinc-800 p-4 rounded-xl flex items-center gap-2">
                 <i data-lucide="search" class="text-gray-400"></i>
-                <input type="text" placeholder="Search by AWB or Order ID" class="w-full bg-transparent focus:outline-none">
+                <input type="text" placeholder="Search by AWB or Order ID" class="w-full bg-transparent focus:outline-none text-white">
             </div>
-            <p class="text-xs opacity-50 text-center">Enter data to fetch order details instantly.</p>
         </div>
     </div>
 
@@ -167,57 +230,33 @@
         <div class="p-4 space-y-4 overflow-y-auto flex-1">
             <div class="bg-zinc-800 p-3 rounded-xl flex justify-between items-center">
                 <div>
-                    <h4 class="font-bold">Cotton Cambric Shirt - Blue</h4>
-                    <p class="text-xs opacity-60">SKU: CCS-BLU-M</p>
+                    <h4 class="font-bold">Cotton Cambric Shirt - Indigo</h4>
+                    <p class="text-xs opacity-60">SKU: CCS-IND-M</p>
                 </div>
-                <span class="bg-green-900 text-green-300 px-3 py-1 rounded-full text-xs font-bold">142 In Stock</span>
+                <span class="bg-green-900 text-green-300 px-3 py-1 rounded-full text-xs font-bold">450 In Stock</span>
             </div>
         </div>
     </div>
 
-    <div id="analytics" class="page">
-        <div class="p-4 bg-zinc-900 border-b border-zinc-800 flex justify-between items-center">
-            <button onclick="goBack()" class="text-blue-500 flex items-center"><i data-lucide="chevron-left"></i> Back</button>
-            <h2 class="font-bold text-lg">Analytics</h2>
-            <div class="w-10"></div>
-        </div>
-        <div class="p-4 text-center text-gray-400">Sales and Return matrices will load here.</div>
-    </div>
-
-    <div id="customers" class="page">
-        <div class="p-4 bg-zinc-900 border-b border-zinc-800 flex justify-between items-center">
-            <button onclick="goBack()" class="text-blue-500 flex items-center"><i data-lucide="chevron-left"></i> Back</button>
-            <h2 class="font-bold text-lg">Customers</h2>
-            <div class="w-10"></div>
-        </div>
-        <div class="p-4 text-center text-gray-400">Customer database management.</div>
-    </div>
-
-    <div id="settings" class="page">
-        <div class="p-4 bg-zinc-900 border-b border-zinc-800 flex justify-between items-center">
-            <button onclick="goBack()" class="text-blue-500 flex items-center"><i data-lucide="chevron-left"></i> Back</button>
-            <h2 class="font-bold text-lg">Settings</h2>
-            <div class="w-10"></div>
-        </div>
-        <div class="p-4 text-center text-gray-400">ERP configurations and profile controls.</div>
+    <div id="context-menu">
+        <button onclick="changeSize('size-small')"> Chhota (Small 1x1)</button>
+        <button onclick="changeSize('size-medium')"> Medium (2x1)</button>
+        <button onclick="changeSize('size-large')"> Bada (Large 2x2)</button>
     </div>
 
     <script>
-        // Initialize Lucide Icons
         lucide.createIcons();
-
-        // Navigation History Tracking
         let pageHistory = ['home-page'];
         let forwardHistory = [];
+        let selectedIconElement = null;
+        let pressTimer;
 
-        // URL hash management to stay on the same page during reload
         window.addEventListener('load', () => {
             const hash = window.location.hash.replace('#', '');
-            if (hash && document.getElementById(hash)) {
-                openPage(hash, false);
-            }
+            if (hash && document.getElementById(hash)) { openPage(hash, false); }
             updateClock();
             setInterval(updateClock, 60000);
+            setupSizingListeners();
         });
 
         function updateClock() {
@@ -226,15 +265,16 @@
             document.getElementById('ios-date').innerText = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
         }
 
+        function handleAppClick(elem) {
+            // Context menu open hone par normal click prevent karein
+            if (document.getElementById('context-menu').style.display === 'block') return;
+            openPage(elem.getAttribute('data-id'));
+        }
+
         function openPage(pageId, pushToHistory = true) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            const targetPage = document.getElementById(pageId);
-            targetPage.classList.add('active');
-            
-            if (pushToHistory) {
-                pageHistory.push(pageId);
-                forwardHistory = []; // Clear forward on new actions
-            }
+            document.getElementById(pageId).classList.add('active');
+            if (pushToHistory) { pageHistory.push(pageId); forwardHistory = []; }
             window.location.hash = pageId === 'home-page' ? '' : pageId;
         }
 
@@ -242,8 +282,7 @@
             if (pageHistory.length > 1) {
                 const currentPage = pageHistory.pop();
                 forwardHistory.push(currentPage);
-                const prevPage = pageHistory[pageHistory.length - 1];
-                openPage(prevPage, false);
+                openPage(pageHistory[pageHistory.length - 1], false);
             }
         }
 
@@ -255,48 +294,68 @@
             }
         }
 
-        // --- GESTURE CONTROLS (Swipe Left/Right and Pull-to-Refresh) ---
-        let touchstartX = 0;
-        let touchstartY = 0;
-        let touchendX = 0;
-        let touchendY = 0;
-        const body = document.body;
+        // Context Menu & Long Press Logic
+        function setupSizingListeners() {
+            const icons = document.querySelectorAll('.app-icon');
+            
+            icons.forEach(icon => {
+                // Desktop Right Click
+                icon.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    showMenu(e.clientX, e.clientY, icon);
+                });
 
-        body.addEventListener('touchstart', e => {
-            touchstartX = e.changedTouches[0].screenX;
-            touchstartY = e.changedTouches[0].screenY;
-        }, {passive: true});
+                // Mobile Long Press
+                icon.addEventListener('touchstart', function(e) {
+                    pressTimer = setTimeout(() => {
+                        e.preventDefault();
+                        showMenu(e.touches[0].clientX, e.touches[0].clientY, icon);
+                    }, 600);
+                }, {passive: false});
 
-        body.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            touchendY = e.changedTouches[0].screenY;
-            handleGesture();
-        }, {passive: true});
+                icon.addEventListener('touchend', function() { clearTimeout(pressTimer); });
+            });
+
+            document.addEventListener('click', () => { document.getElementById('context-menu').style.display = 'none'; });
+        }
+
+        function showMenu(x, y, elem) {
+            selectedIconElement = elem;
+            const menu = document.getElementById('context-menu');
+            menu.style.display = 'block';
+            menu.style.left = `${x}px`;
+            menu.style.top = `${y}px`;
+        }
+
+        function changeSize(newSize) {
+            if (!selectedIconElement) return;
+            selectedIconElement.classList.remove('size-small', 'size-medium', 'size-large');
+            selectedIconElement.classList.add(newSize);
+            document.getElementById('context-menu').style.display = 'none';
+            lucide.createIcons(); // SVG icon adjust updates
+        }
+
+        // Gestures
+        let tx = 0, ty = 0, ex = 0, ey = 0;
+        document.body.addEventListener('touchstart', e => { tx = e.changedTouches[0].screenX; ty = e.changedTouches[0].screenY; }, {passive: true});
+        document.body.addEventListener('touchend', e => { ex = e.changedTouches[0].screenX; ey = e.changedTouches[0].screenY; handleGesture(); }, {passive: true});
 
         function handleGesture() {
-            const diffX = touchendX - touchstartX;
-            const diffY = touchendY - touchstartY;
-
-            // Horizontal Swipes (Back / Forward)
-            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 80) {
-                if (diffX > 0) {
-                    goBack(); // Swipe Right -> Go Back
-                } else {
-                    goForward(); // Swipe Left -> Go Forward
-                }
+            let dx = ex - tx, dy = ey - ty;
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 80) {
+                if (dx > 0) goBack(); else goForward();
             }
-
-            // Vertical Swipe (Pull Down to Refresh)
-            if (diffY > 120 && Math.abs(diffX) < 50) {
+            if (dy > 120 && Math.abs(dx) < 50) {
                 const activePage = pageHistory[pageHistory.length - 1];
                 const indicator = document.getElementById('ptr-indicator');
-                
                 indicator.style.transform = 'translateY(70px)';
                 setTimeout(() => {
                     indicator.style.transform = 'translateY(0px)';
-                    // Simulating page refresh logic for that specific ERP module
-                    console.log(`${activePage} refreshed!`);
-                    alert(`${document.getElementById(activePage).querySelector('h2')?.innerText || 'Home'} Page Refreshed!`);
+                    if(activePage === 'daily-scan') {
+                        document.querySelector('iframe').contentWindow.location.reload();
+                    } else {
+                        alert(`Page Refreshed!`);
+                    }
                 }, 1000);
             }
         }
